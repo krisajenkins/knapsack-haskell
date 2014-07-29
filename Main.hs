@@ -1,6 +1,7 @@
 module Main where
 
 import Data.List
+import Data.Maybe
 
 type Weight = Integer
 type Name = String
@@ -26,9 +27,9 @@ weight (Item _ w) = w
 name :: Item -> Name
 name (Item n _) = n
 
-g :: [Weight] -> Weight
-g [] = 0
-g xs = maximum xs
+maxMaybe :: [Weight] -> Maybe Weight
+maxMaybe [] = Nothing
+maxMaybe xs = Just (maximum xs)
 
 maxWeight :: Weight -> Item -> Bool
 maxWeight w i = (>=) w (weight i)
@@ -36,7 +37,7 @@ maxWeight w i = (>=) w (weight i)
 knapsack :: [Item] -> Weight -> Weight
 knapsack [] _ = 0
 knapsack _ 0 = 0
-knapsack xs w = g possibleSolutions
+knapsack xs w = fromMaybe 0 (maxMaybe possibleSolutions)
                 where validItems = filter (maxWeight w) xs
                       possibleSolutions = fmap f validItems
                       f i = weight i + knapsack (delete i validItems) (w - weight i)
