@@ -27,7 +27,7 @@ weight (Item _ w) = w
 name :: Item -> Name
 name (Item n _) = n
 
-maxMaybe :: [Weight] -> Maybe Weight
+maxMaybe :: Ord a => [a] -> Maybe a
 maxMaybe [] = Nothing
 maxMaybe xs = Just (maximum xs)
 
