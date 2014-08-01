@@ -23,8 +23,7 @@ items = [
         ]
 
 weights :: [Item] -> Weight
-weights [] = 0
-weights xs = Data.List.foldl (\x y -> (+) x (weight y)) 0 xs
+weights = sum . map weight
 
 ------------------------------------------------------------
 
