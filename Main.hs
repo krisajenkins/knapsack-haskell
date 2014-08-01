@@ -1,15 +1,17 @@
 module Main where
 
 import Data.List
+import Data.Function (on)
 
 type Weight = Integer
 type Name = String
 
-data Item = Item Name Weight
+data Item = Item { name   :: Name
+                 , weight :: Weight }
               deriving (Read, Show, Eq)
 
 instance Ord Item where
-  compare a b = compare (weight a) (weight b)
+  compare = compare `on` weight
 
 items :: [Item]
 items = [
@@ -20,15 +22,8 @@ items = [
            Item "Blue" 1
         ]
 
-weight :: Item -> Weight
-weight (Item _ w) = w
-
 weights :: [Item] -> Weight
-weights [] = 0
-weights xs = Data.List.foldl (\x y -> (+) x (weight y)) 0 xs
-
-name :: Item -> Name
-name (Item n _) = n
+weights = sum . map weight
 
 ------------------------------------------------------------
 
@@ -40,30 +35,25 @@ compareSolutions xs ys
   | length xs < length ys = GT
   | otherwise = EQ
 
-maxWeight :: Weight -> Item -> Bool
-maxWeight w i = (>=) w (weight i)
-
 largestSolution :: [[Item]] -> [Item]
 largestSolution [] = []
 largestSolution is = maximumBy compareSolutions is
 
+knapsack :: ([Item] -> Item -> [Item]) -> [Item] -> Weight -> [Item]
+knapsack _ [] _ = []
+knapsack _ _ 0 = []
+knapsack prune xs w = largestSolution possibleSolutions
+  where validItems = filter (\i -> w >= weight i) xs
+        possibleSolutions = fmap ksWithout validItems
+        ksWithout i = i : knapsack prune (prune validItems i) (w - weight i)
+
 -- | Unbounded Knapsack
 uks :: [Item] -> Weight -> [Item]
-uks [] _ = []
-uks _ 0  = []
-uks xs w = largestSolution possibleSolutions
-                where validItems = filter (maxWeight w) xs
-                      possibleSolutions = fmap uksWithout validItems
-                      uksWithout i = i : uks validItems (w - weight i)
+uks = knapsack const
 
 -- | Bounded Knapsack
 bks :: [Item] -> Weight -> [Item]
-bks [] _ = []
-bks _ 0  = []
-bks xs w = largestSolution possibleSolutions
-                where validItems = filter (maxWeight w) xs
-                      possibleSolutions = fmap bksWithout validItems
-                      bksWithout i = i : bks (delete i validItems) (w - weight i)
+bks = knapsack (flip delete)
 
 -- TODO : Memoize both solutions.
 main :: IO ()
