@@ -25,8 +25,7 @@ weight :: Item -> Weight
 weight (Item _ w) = w
 
 weights :: [Item] -> Weight
-weights [] = 0
-weights xs = Data.List.foldl (\x y -> (+) x (weight y)) 0 xs
+weights = sum . map weight
 
 name :: Item -> Name
 name (Item n _) = n
