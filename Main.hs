@@ -1,6 +1,7 @@
 module Main where
 
 import Data.List
+import Data.Function (on)
 
 type Weight = Integer
 type Name = String
@@ -9,7 +10,7 @@ data Item = Item Name Weight
               deriving (Read, Show, Eq)
 
 instance Ord Item where
-  compare a b = compare (weight a) (weight b)
+  compare = compare `on` weight
 
 items :: [Item]
 items = [
