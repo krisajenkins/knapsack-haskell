@@ -1,7 +1,6 @@
 module Main where
 
 import Data.List
-import Data.Maybe
 
 type Weight = Integer
 type Name = String
@@ -24,23 +23,53 @@ items = [
 weight :: Item -> Weight
 weight (Item _ w) = w
 
+weights :: [Item] -> Weight
+weights [] = 0
+weights xs = Data.List.foldl (\x y -> (+) x (weight y)) 0 xs
+
 name :: Item -> Name
 name (Item n _) = n
 
-maxMaybe :: Ord a => [a] -> Maybe a
-maxMaybe [] = Nothing
-maxMaybe xs = Just (maximum xs)
+------------------------------------------------------------
+
+compareSolutions :: [Item] -> [Item] -> Ordering
+compareSolutions xs ys
+  | weights xs > weights ys = GT
+  | weights xs < weights ys = LT
+  | length xs > length ys = LT
+  | length xs < length ys = GT
+  | otherwise = EQ
 
 maxWeight :: Weight -> Item -> Bool
 maxWeight w i = (>=) w (weight i)
 
-knapsack :: [Item] -> Weight -> Weight
-knapsack [] _ = 0
-knapsack _ 0 = 0
-knapsack xs w = fromMaybe 0 (maxMaybe possibleSolutions)
-                where validItems = filter (maxWeight w) xs
-                      possibleSolutions = fmap f validItems
-                      f i = weight i + knapsack (delete i validItems) (w - weight i)
+largestSolution :: [[Item]] -> [Item]
+largestSolution [] = []
+largestSolution is = maximumBy compareSolutions is
 
+-- | Unbounded Knapsack
+uks :: [Item] -> Weight -> [Item]
+uks [] _ = []
+uks _ 0  = []
+uks xs w = largestSolution possibleSolutions
+                where validItems = filter (maxWeight w) xs
+                      possibleSolutions = fmap uksWithout validItems
+                      uksWithout i = i : uks validItems (w - weight i)
+
+-- | Bounded Knapsack
+bks :: [Item] -> Weight -> [Item]
+bks [] _ = []
+bks _ 0  = []
+bks xs w = largestSolution possibleSolutions
+                where validItems = filter (maxWeight w) xs
+                      possibleSolutions = fmap bksWithout validItems
+                      bksWithout i = i : bks (delete i validItems) (w - weight i)
+
+-- TODO : Memoize both solutions.
 main :: IO ()
-main = print (knapsack items 27)
+main = do
+         print (weights b, b)
+         print (weights u, u)
+         where n = 40
+               b = bks items n
+               u = uks items n
