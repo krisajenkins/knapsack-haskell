@@ -5,7 +5,8 @@ import Data.List
 type Weight = Integer
 type Name = String
 
-data Item = Item Name Weight
+data Item = Item { name   :: Name
+                 , weight :: Weight }
               deriving (Read, Show, Eq)
 
 instance Ord Item where
@@ -20,15 +21,9 @@ items = [
            Item "Blue" 1
         ]
 
-weight :: Item -> Weight
-weight (Item _ w) = w
-
 weights :: [Item] -> Weight
 weights [] = 0
 weights xs = Data.List.foldl (\x y -> (+) x (weight y)) 0 xs
-
-name :: Item -> Name
-name (Item n _) = n
 
 ------------------------------------------------------------
 
