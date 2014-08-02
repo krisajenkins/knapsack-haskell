@@ -52,10 +52,7 @@ bks = knapsack (flip delete)
 -- Items to put in the knapsack
 ------------------------------------------------------------
 
-type Weight = Integer
-type Name = String
-
-data Item = Item Name Weight
+data Item = Item String Integer
               deriving (Read, Show, Eq)
 
 instance Costed Item where
