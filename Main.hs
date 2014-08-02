@@ -36,9 +36,9 @@ knapsack :: Costed a => (a -> [a] -> [a]) -> Integer -> [a] -> [a]
 knapsack _ 0 _  = []
 knapsack _ _ [] = []
 knapsack prune w xs = largestSolution possibleSolutions
-                                  where validItems = filter (costWithin w) xs
-                                        possibleSolutions = fmap knapsackWithout validItems
-                                        knapsackWithout i = i : knapsack prune (w - cost i) (prune i validItems)
+  where validItems = filter (costWithin w) xs
+        possibleSolutions = fmap knapsackWithout validItems
+        knapsackWithout i = i : knapsack prune (w - cost i) (prune i validItems)
 
 -- | Unbounded Knapsack. There is an unlimited number of each item.
 uks :: Costed a => Integer -> [a] -> [a]
@@ -71,8 +71,8 @@ items = [
 
 main :: IO ()
 main = do
-         print (totalCost b, b)
-         print (totalCost u, u)
-         where n = 30
-               b = bks n items
-               u = uks n items
+  print (totalCost b, b)
+  print (totalCost u, u)
+  where n = 30
+        b = bks n items
+        u = uks n items
