@@ -25,7 +25,7 @@ totalCost :: Costed a => [a] -> Integer
 totalCost = sum . fmap cost
 
 costWithin :: Costed a => Integer -> a -> Bool
-costWithin w a = (>=) w (cost a)
+costWithin w a = w >= cost a
 
 largestSolution :: Costed a => [[a]] -> [a]
 largestSolution [] = []
