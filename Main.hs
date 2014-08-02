@@ -32,21 +32,21 @@ largestSolution [] = []
 largestSolution is = maximumBy (tiebreak (comparing totalCost) (flip (comparing length))) is
 
 -- TODO : Memoize.
-knapsack :: Costed a => ([a] -> a -> [a]) -> Integer -> [a] -> [a]
+knapsack :: Costed a => (a -> [a] -> [a]) -> Integer -> [a] -> [a]
 knapsack _ 0 _  = []
 knapsack _ _ [] = []
 knapsack prune w xs = largestSolution possibleSolutions
                                   where validItems = filter (costWithin w) xs
                                         possibleSolutions = fmap knapsackWithout validItems
-                                        knapsackWithout i = i : knapsack prune (w - cost i) (prune validItems i)
+                                        knapsackWithout i = i : knapsack prune (w - cost i) (prune i validItems)
 
--- | Unbounded Knapsack
+-- | Unbounded Knapsack. There is an unlimited number of each item.
 uks :: Costed a => Integer -> [a] -> [a]
-uks = knapsack const
+uks = knapsack (flip const)
 
--- | Bounded Knapsack
+-- | Bounded Knapsack. Items can only be consumed once.
 bks :: (Eq a, Costed a) => Integer -> [a] -> [a]
-bks = knapsack (flip delete)
+bks = knapsack delete
 
 ------------------------------------------------------------
 -- Items to put in the knapsack
