@@ -1,7 +1,56 @@
 module Main where
 
 import Data.List
-import Data.Function (on)
+import Data.Ord
+
+------------------------------------------------------------
+-- Utility.
+------------------------------------------------------------
+
+-- | Compare with the first function. In the event of a tiebreak, compare with the next.
+-- | I expect there's a built-in for this, but I can't find it.
+tiebreak :: (a -> a -> Ordering) -> (a -> a -> Ordering) -> a -> a -> Ordering
+tiebreak f g a b
+  | f a b == EQ = g a b
+  | otherwise = f a b
+
+------------------------------------------------------------
+-- The knapsack algorithm
+------------------------------------------------------------
+
+class Costed a where
+  cost :: a -> Integer
+
+totalCost :: Costed a => [a] -> Integer
+totalCost = sum . fmap cost
+
+costWithin :: Costed a => Integer -> a -> Bool
+costWithin w a = (>=) w (cost a)
+
+largestSolution :: Costed a => [[a]] -> [a]
+largestSolution [] = []
+largestSolution is = maximumBy (tiebreak (comparing totalCost) (flip (comparing length))) is
+
+-- TODO : Memoize.
+knapsack :: Costed a => ([a] -> a -> [a]) -> Integer -> [a] -> [a]
+knapsack _ 0 _  = []
+knapsack _ _ [] = []
+knapsack prune w xs = largestSolution possibleSolutions
+                                  where validItems = filter (costWithin w) xs
+                                        possibleSolutions = fmap knapsackWithout validItems
+                                        knapsackWithout i = i : knapsack prune (w - cost i) (prune validItems i)
+
+-- | Unbounded Knapsack
+uks :: Costed a => Integer -> [a] -> [a]
+uks = knapsack const
+
+-- | Bounded Knapsack
+bks :: (Eq a, Costed a) => Integer -> [a] -> [a]
+bks = knapsack (flip delete)
+
+------------------------------------------------------------
+-- Items to put in the knapsack
+------------------------------------------------------------
 
 type Weight = Integer
 type Name = String
@@ -9,8 +58,8 @@ type Name = String
 data Item = Item Name Weight
               deriving (Read, Show, Eq)
 
-instance Ord Item where
-  compare = compare `on` weight
+instance Costed Item where
+  cost (Item _ w) = w
 
 items :: [Item]
 items = [
@@ -21,55 +70,12 @@ items = [
            Item "Blue" 1
         ]
 
-weight :: Item -> Weight
-weight (Item _ w) = w
+ ------------------------------------------------------------
 
-weights :: [Item] -> Weight
-weights = sum . map weight
-
-name :: Item -> Name
-name (Item n _) = n
-
-------------------------------------------------------------
-
-compareSolutions :: [Item] -> [Item] -> Ordering
-compareSolutions xs ys
-  | weights xs > weights ys = GT
-  | weights xs < weights ys = LT
-  | length xs > length ys = LT
-  | length xs < length ys = GT
-  | otherwise = EQ
-
-maxWeight :: Weight -> Item -> Bool
-maxWeight w i = (>=) w (weight i)
-
-largestSolution :: [[Item]] -> [Item]
-largestSolution [] = []
-largestSolution is = maximumBy compareSolutions is
-
--- | Unbounded Knapsack
-uks :: [Item] -> Weight -> [Item]
-uks [] _ = []
-uks _ 0  = []
-uks xs w = largestSolution possibleSolutions
-                where validItems = filter (maxWeight w) xs
-                      possibleSolutions = fmap uksWithout validItems
-                      uksWithout i = i : uks validItems (w - weight i)
-
--- | Bounded Knapsack
-bks :: [Item] -> Weight -> [Item]
-bks [] _ = []
-bks _ 0  = []
-bks xs w = largestSolution possibleSolutions
-                where validItems = filter (maxWeight w) xs
-                      possibleSolutions = fmap bksWithout validItems
-                      bksWithout i = i : bks (delete i validItems) (w - weight i)
-
--- TODO : Memoize both solutions.
 main :: IO ()
 main = do
-         print (weights b, b)
-         print (weights u, u)
-         where n = 40
-               b = bks items n
-               u = uks items n
+         print (totalCost b, b)
+         print (totalCost u, u)
+         where n = 30
+               b = bks n items
+               u = uks n items
