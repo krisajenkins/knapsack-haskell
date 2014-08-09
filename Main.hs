@@ -18,20 +18,20 @@ tiebreak f g a b
 -- The knapsack algorithm
 ------------------------------------------------------------
 
-type Cost a = a -> Integer
+type Cost a b = a -> b
 
-totalCost :: Cost a -> [a] -> Integer
+totalCost :: (Num b, Ord b) => Cost a b -> [a] -> b
 totalCost cost = sum . fmap cost
 
-costWithin :: Cost a -> Integer -> a -> Bool
+costWithin :: Ord b => Cost a b -> b -> a -> Bool
 costWithin cost w a = w >= cost a
 
-largestSolution :: Cost a -> [[a]] -> [a]
+largestSolution :: (Num b, Ord b) => Cost a b -> [[a]] -> [a]
 largestSolution _ [] = []
 largestSolution cost is = maximumBy (tiebreak (comparing (totalCost cost)) (flip (comparing length))) is
 
 -- TODO : Memoize.
-knapsack :: Cost a -> (a -> [a] -> [a]) -> Integer -> [a] -> [a]
+knapsack :: (Num b, Ord b) => Cost a b -> (a -> [a] -> [a]) -> b -> [a] -> [a]
 knapsack _ _ 0 _  = []
 knapsack _ _ _ [] = []
 knapsack cost prune w xs = largestSolution cost possibleSolutions
@@ -40,11 +40,11 @@ knapsack cost prune w xs = largestSolution cost possibleSolutions
         knapsackWithout i = i : knapsack cost prune (w - cost i) (prune i validItems)
 
 -- | Unbounded Knapsack. There is an unlimited number of each item.
-uks :: Cost a -> Integer -> [a] -> [a]
+uks :: (Num b, Ord b) => Cost a b -> b -> [a] -> [a]
 uks cost = knapsack cost (flip const)
 
 -- | Bounded Knapsack. Items can only be consumed once.
-bks :: (Eq a) => Cost a -> Integer -> [a] -> [a]
+bks :: (Eq a, Num b, Ord b) => Cost a b -> b -> [a] -> [a]
 bks cost = knapsack cost delete
 
 ------------------------------------------------------------
@@ -54,7 +54,7 @@ bks cost = knapsack cost delete
 data Item = Item String Integer
               deriving (Read, Show, Eq)
 
-itemCost :: Cost Item
+itemCost :: Cost Item Integer
 itemCost (Item _ w) = w
 
 items :: [Item]
