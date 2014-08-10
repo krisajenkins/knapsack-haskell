@@ -10,9 +10,9 @@ import Data.Ord
 -- | Compare with the first function. In the event of a tiebreak, compare with the next.
 -- | I expect there's a built-in for this, but I can't find it.
 tiebreak :: (a -> a -> Ordering) -> (a -> a -> Ordering) -> a -> a -> Ordering
-tiebreak f g a b
-  | f a b == EQ = g a b
-  | otherwise = f a b
+tiebreak f g a b = case f a b of
+                     EQ -> g a b
+                     o  -> o
 
 ------------------------------------------------------------
 -- The knapsack algorithm
