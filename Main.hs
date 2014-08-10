@@ -1,13 +1,10 @@
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
-import Data.Function
 import Data.Function.Memoize
 import Data.List
 import Data.Ord
-import Debug.Trace
 
 ------------------------------------------------------------
 -- Utility.
@@ -32,9 +29,9 @@ totalWith f = sum . fmap f
 class Costed a where
   cost :: a -> Integer
 
--- TODO Use this aliases.
 type Solution a = [a]
-type Prune a = a -> [a] -> [a]
+type Pruner a = a -> [a] -> [a]
+type Knapsacker a = Integer -> [a] -> Solution a
 
 costsAtMost :: Costed a => Integer -> a -> Bool
 costsAtMost w a = w >= cost a
@@ -49,26 +46,22 @@ largestSolution is = maximumBy compareSolutions is
 validItems :: Costed a => Integer -> [a] -> [a]
 validItems w xs = filter (costsAtMost w) xs
 
---type KS a = Prune a -> Integer -> Set a -> Solution a
--- TODO : Memoize.
-knapsack :: (Costed a, Show a) => Prune a -> (Integer -> [a] -> Solution a) -> Integer -> [a] -> Solution a
+knapsack :: Costed a => Pruner a -> Knapsacker a -> Knapsacker a
 knapsack _ _ 0 _ = []
 knapsack _ _ _ [] = []
-knapsack prune f w xs = largestSolution (fmap knapsackWithout2 (validItems w xs))
-  where knapsackWithout2 i = (:) i is
+knapsack prune f w xs = largestSolution (fmap subSack (validItems w xs))
+  where subSack i = i:is
           where w' = w - cost i
                 xs' = prune i xs
                 is = f w' xs'
 
 -- | Unbounded Knapsack. There is an unlimited number of each item.
-uks :: (Costed a, Memoizable a, Show a) => Integer -> [a] -> Solution a
-uks = fix (memoize2 . f)
-      where f = knapsack (flip const)
+uks :: (Costed a, Memoizable a) => Knapsacker a
+uks = memoFix2 (knapsack (flip const))
 
 -- | Bounded Knapsack. Items can only be consumed once.
-bks :: (Costed a, Memoizable a, Eq a, Show a) => Integer -> [a] -> Solution a
-bks = fix (memoize2 . f)
-      where f = knapsack delete
+bks :: (Costed a, Memoizable a, Eq a) => Knapsacker a
+bks = memoFix2 (knapsack delete)
 
 ------------------------------------------------------------
 -- Items to put in the knapsack
@@ -106,6 +99,6 @@ main :: IO ()
 main = do
   print (totalWith cost b, b)
   print (totalWith cost u, u)
-  where n = 40
+  where n = 100
         b = bks n items
         u = uks n items
