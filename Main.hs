@@ -21,9 +21,6 @@ tiebreak f g a b = case f a b of
 totalCost :: (Num b, Ord b) => (a -> b) -> [a] -> b
 totalCost cost = sum . fmap cost
 
-costWithin :: Ord b => (a -> b) -> b -> a -> Bool
-costWithin cost w a = w >= cost a
-
 largestSolution :: (Num b, Ord b) => (a -> b) -> [[a]] -> [a]
 largestSolution _ [] = []
 largestSolution cost is = maximumBy (tiebreak (comparing (totalCost cost)) (flip (comparing length))) is
@@ -33,7 +30,7 @@ knapsack :: (Num b, Ord b) => (a -> b) -> (a -> [a] -> [a]) -> b -> [a] -> [a]
 knapsack _ _ 0 _  = []
 knapsack _ _ _ [] = []
 knapsack cost prune w xs = largestSolution cost possibleSolutions
-  where validItems = filter (costWithin cost w) xs
+  where validItems = filter ((<= w) . cost) xs
         possibleSolutions = fmap knapsackWithout validItems
         knapsackWithout i = i : knapsack cost prune (w - cost i) (prune i validItems)
 
