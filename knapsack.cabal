@@ -17,5 +17,7 @@ cabal-version:       >=1.10
 
 executable knapsack
   main-is:             Main.hs
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       containers >= 0.5.5.1,
+                       base >=4.7 && <4.8,
+                       memoize >=0.6
   default-language:    Haskell2010
