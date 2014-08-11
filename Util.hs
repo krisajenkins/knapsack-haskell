@@ -13,5 +13,5 @@ tiebreak f g a b = case f a b of
 
 -- This shouldn't be list-specific, should it? It should work with any
 -- functor. But sum seems unhappy with that idea.
-totalWith :: (a -> Integer) -> [a] -> Integer
+totalWith :: Num n => (a -> n) -> [a] -> n
 totalWith f = sum . fmap f
